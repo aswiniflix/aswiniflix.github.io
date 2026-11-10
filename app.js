@@ -405,7 +405,7 @@
       const a = e.target.closest("[data-act]");
       if (!a) return;
       ({
-        play: () => openPlayer(C.episodes, nextUnwatched()),
+        play: () => openTitle(true),  // Play opens the episodes section; a video starts only when she picks one
         list: toggleList,
         cast: () => toast(`Casting love to ${C.herName}'s heart… connected 💞`),
         search: () => toast(`Search results: only ${C.herName} 🔍`),
@@ -584,12 +584,21 @@
     });
     $("#seasonBtn").addEventListener("click", () => toast(`Season ${SEASON}: the best one so far ✨`));
   }
-  function openTitle() {
+  function openTitle(toEpisodes) {
     const tp = $("#title");
     tp.classList.add("on");
     tp.setAttribute("aria-hidden", "false");
-    $(".tp-scroll", tp).scrollTop = 0;
+    const sc = $(".tp-scroll", tp);
+    sc.scrollTop = 0;
     $("#tpVid")?.play?.().catch(() => {});
+    if (toEpisodes === true) {  // home "Play": open the show and glide down to the episode list so she picks one
+      $$(".tab", tp).forEach(x => x.classList.toggle("on", x.dataset.tab === "eps"));
+      $$(".panel", tp).forEach(p => p.classList.toggle("on", p.id === "p-eps"));
+      setTimeout(() => {
+        const top = $(".tabs", tp).offsetTop - $("#tpMedia").offsetHeight - 8;
+        sc.scrollTo({top: Math.max(0, top), behavior: "smooth"});
+      }, 520);
+    }
   }
   function closeTitle() {
     const tp = $("#title");
