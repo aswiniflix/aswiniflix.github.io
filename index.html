@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Aswiniflix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=14">
+</head>
+<body>
+<div id="app">
+
+  <!-- 0. Tap to open (needed so the sound can play on phones) -->
+  <section id="start" class="screen active">
+    <div class="start-glow"></div>
+    <button class="app-icon" id="appIcon" aria-label="Open">
+      <span class="app-letter"></span>
+    </button>
+    <div class="app-name"></div>
+    <div class="tap-hint">Tap to open</div>
+  </section>
+
+  <!-- 1. Animated intro -->
+  <section id="intro" class="screen">
+    <div class="wordmark" id="wordmark"></div>
+    <div class="stripes" id="stripes"></div>
+  </section>
+
+  <!-- 2. Choose your profile -->
+  <section id="profiles" class="screen">
+    <div class="p-hero" id="pHero"></div>
+    <div class="p-hero-shade"></div>
+    <div class="p-sheet">
+      <div class="p-hero-text">
+        <div class="p-kicker"><b id="pKick"></b>SERIES</div>
+        <div class="p-title" id="pTitle"></div>
+        <div class="p-tagline" id="pTagline"></div>
+      </div>
+      <div class="p-panel">
+        <div class="p-choose">Choose your profile</div>
+        <div class="p-grid" id="pGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Title / home page -->
+  <section id="home" class="screen"></section>
+
+  <!-- Title page (slides up) -->
+  <div id="title" aria-hidden="true"></div>
+
+  <!-- profile -> home transition -->
+  <div id="pick" aria-hidden="true"><div class="pick-ring"></div></div>
+
+  <!-- Video player -->
+  <div id="player" aria-hidden="true">
+    <video id="pv" playsinline webkit-playsinline preload="metadata"></video>
+    <div class="pl-ph" id="plPh"><div class="pl-ph-in"><div class="pl-ph-icon">🎬</div><div class="pl-ph-t">Episode coming soon</div><div class="pl-ph-s" id="plPhS"></div></div></div>
+    <div class="pl-ui" id="plUi">
+      <div class="pl-top">
+        <button class="pl-ic" id="plBack" aria-label="Back">
+          <svg viewBox="0 0 24 24"><path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="pl-title" id="plTitle"></div>
+        <span class="pl-ic"></span>
+      </div>
+      <div class="pl-center">
+        <button class="pl-ic big" id="plRew" aria-label="Back 10 seconds">
+          <svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="12" y="16.3" font-size="6.5" text-anchor="middle" fill="currentColor" font-family="Inter" font-weight="700">10</text></svg>
+        </button>
+        <button class="pl-ic huge" id="plPlay" aria-label="Play or pause">
+          <svg class="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></svg>
+          <svg class="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>
+        </button>
+        <button class="pl-ic big" id="plFwd" aria-label="Forward 10 seconds">
+          <svg viewBox="0 0 24 24"><path d="M12 5V2l5 4-5 4V7a6 6 0 1 0 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="12" y="16.3" font-size="6.5" text-anchor="middle" fill="currentColor" font-family="Inter" font-weight="700">10</text></svg>
+        </button>
+      </div>
+      <div class="pl-bottom">
+        <div class="pl-prog-row">
+          <div class="pl-prog" id="plProg"><div class="pl-buf" id="plBuf"></div><div class="pl-fill" id="plFill"><span class="pl-knob"></span></div></div>
+          <div class="pl-time" id="plTime">0:00</div>
+        </div>
+        <div class="pl-actions">
+          <button id="plEps"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 4h12a2 2 0 0 1 2 2v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Episodes</button>
+          <button id="plAudio"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 14h4M13 14h4M7 10h2M11 10h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Audio &amp; Subtitles</button>
+          <button id="plNext"><svg viewBox="0 0 24 24"><path d="M5 5v14l10-7z" fill="currentColor"/><rect x="17" y="5" width="2.5" height="14" rx="1" fill="currentColor"/></svg>Next Episode</button>
+        </div>
+      </div>
+    </div>
+    <div class="pl-sheet" id="plSheet"><div class="pl-sheet-in" id="plSheetIn"></div></div>
+  </div>
+
+  <!-- Photo viewer -->
+  <div id="lightbox" aria-hidden="true"><div class="lb-media" id="lbMedia"></div><div class="lb-cap" id="lbCap"></div></div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="config.js?v=14"></script>
+<script src="app.js?v=14"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Only the website goes to GitHub. Raw footage, full songs and editing work stay on this Mac.
+.DS_Store
+.claude/
+ref/
+aswinivideos/
+chanduvideos/
+imagesaswini/
+songs/
+songssss/
+batmannnnnnnnn/
+profiles/
+edits/ep1/
+edits/ep2/
+edits/ep3/
+edits/music/
+edits/tools/faces_preview.html
+edits/tools/chandu_frame.jpg
+*.zip

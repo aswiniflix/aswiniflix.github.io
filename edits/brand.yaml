@@ -1,0 +1,3 @@
+display_name: ""
+colours: {primary: "#E50914", accent: "#FF6B9A", gradient_primary: ["#FFFFFF", "#FF9DBB"], caption_colour: "#FFD1E0"}
+fonts: {headline: "Avenir Next", body: "Avenir Next"}
