@@ -8,7 +8,7 @@
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#000;color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+html,body{height:100%;background:#000;color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #app{position:relative;max-width:480px;height:100dvh;margin:0 auto;overflow:hidden;background:#000}
 @media (min-width:481px){#app{box-shadow:0 0 0 1px #1d1d1d,0 0 120px rgba(229,9,20,.07)}}

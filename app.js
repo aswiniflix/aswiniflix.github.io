@@ -60,6 +60,7 @@
     toastT = setTimeout(() => t.classList.remove("on"), 2300);
   }
   const show = id => $$(".screen").forEach(s => s.classList.toggle("active", s.id === id));
+  const NAV = { applying: false };  // true while Back/refresh is replaying a history entry (no new entries)
 
   /* ---------- ambient colour from the current photo ---------- */
   function ambColor(m) {
@@ -167,7 +168,7 @@
     requestAnimationFrame(() => intro.classList.add("play"));
     setTimeout(tadum, 120 + letters.length * 70);
     setTimeout(() => intro.classList.add("zoom"), 1900 + letters.length * 40);
-    setTimeout(buildProfiles, 3500 + letters.length * 40);
+    setTimeout(() => { buildProfiles(); navReplace(); }, 3500 + letters.length * 40);
   }
 
   /* ================= 2. PROFILES ================= */
@@ -236,6 +237,7 @@
   function enterHome() {
     buildHome();
     show("home");
+    navPush();
     setTimeout(() => $("#app > .banner")?.classList.add("on"), 1200);
     setTimeout(() => $("#app > .banner")?.classList.remove("on"), 5400);
     if (SI.isToday) setTimeout(confetti, 900);
@@ -409,7 +411,7 @@
         list: toggleList,
         cast: () => toast(`Casting love to ${C.herName}'s heart… connected 💞`),
         search: () => toast(`Search results: only ${C.herName} 🔍`),
-        switch: () => { clearInterval(clockTimer); clearInterval(posterTimer); buildProfiles(); },
+        switch: () => { clearInterval(clockTimer); clearInterval(posterTimer); buildProfiles(); navPush(); },
         remind: () => {
           state.remind = !state.remind;
           $$("[data-act=remind]").forEach(b => b.classList.toggle("on", state.remind));
@@ -429,7 +431,9 @@
   }
 
   function switchView(name) {
+    const same = $("#home .view.on")?.id === "v-" + name;
     $$("#home .view").forEach(v => v.classList.toggle("on", v.id === "v-" + name));
+    if (!same) navPush();
     $$("#home .bnav button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
     const v = $("#v-" + name); if (v) v.scrollTop = 0;
   }
@@ -565,7 +569,7 @@
       $$(".tab", tp).forEach(x => x.classList.toggle("on", x === t));
       $$(".panel", tp).forEach(p => p.classList.toggle("on", p.id === "p-" + t.dataset.tab));
     }));
-    $("#tpX").addEventListener("click", closeTitle);
+    $("#tpX").addEventListener("click", () => backOr(closeTitle));
     $("#tpPlay").addEventListener("click", () => openPlayer(C.episodes, nextUnwatched()));
     $("#tpDown").addEventListener("click", () => toast(`Downloaded to heart: 100% ❤️`));
     $("#tpList").addEventListener("click", toggleList);
@@ -591,6 +595,7 @@
     const sc = $(".tp-scroll", tp);
     sc.scrollTop = 0;
     $("#tpVid")?.play?.().catch(() => {});
+    navPush();
     if (toEpisodes === true) {  // home "Play": open the show and glide down to the episode list so she picks one
       $$(".tab", tp).forEach(x => x.classList.toggle("on", x.dataset.tab === "eps"));
       $$(".panel", tp).forEach(p => p.classList.toggle("on", p.id === "p-eps"));
@@ -661,6 +666,7 @@
     pl.classList.add("on");
     pl.setAttribute("aria-hidden", "false");
     load(i);
+    navPush();
   }
   function load(i) {
     P.i = i;
@@ -717,7 +723,7 @@
   $("#plRew").addEventListener("click", () => { v.currentTime = Math.max(0, v.currentTime - 10); showUi(); });
   $("#plFwd").addEventListener("click", () => { v.currentTime = Math.min(v.duration || 0, v.currentTime + 10); showUi(); });
   $("#plNext").addEventListener("click", () => { if (P.i < P.list.length - 1) load(P.i + 1); });
-  $("#plBack").addEventListener("click", closePlayer);
+  $("#plBack").addEventListener("click", () => backOr(closePlayer));
   function closePlayer() {
     v.pause();
     pl.classList.remove("on");
@@ -768,8 +774,9 @@
     $("#lbMedia").replaceWith(Object.assign(media(m.photo, base(m.photo), hue(i), "lb-media"), { id: "lbMedia" }));
     $("#lbCap").textContent = m.title;
     lb.classList.add("on");
+    navPush();
   }
-  lb.addEventListener("click", () => lb.classList.remove("on"));
+  lb.addEventListener("click", () => backOr(() => lb.classList.remove("on")));
 
   /* ================= CONFETTI ================= */
   function confetti() {
@@ -783,15 +790,76 @@
 
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    if (lb.classList.contains("on")) lb.classList.remove("on");
-    else if (pl.classList.contains("on")) closePlayer();
-    else if ($("#title").classList.contains("on")) closeTitle();
+    if (lb.classList.contains("on")) backOr(() => lb.classList.remove("on"));
+    else if (pl.classList.contains("on")) backOr(closePlayer);
+    else if ($("#title").classList.contains("on")) backOr(closeTitle);
   });
 
-  // Dev shortcuts: index.html#profiles or #home skip the intro
-  if (location.hash === "#home" || location.hash === "#profiles") {
-    started = true;
-    if (location.hash === "#profiles") buildProfiles();
-    else { state.profileIdx = Math.max(0, C.profiles.findIndex(p => p.name === C.herName)); state.profile = C.profiles[state.profileIdx]; enterHome(); }
+  /* ================= HISTORY: phone Back button + refresh ================= */
+  // Every screen / overlay is one history entry, so Back steps back one level (video → episodes → home →
+  // profiles) instead of closing the site. The hash + history.state let a refresh land on the same screen.
+  function cur() {
+    return {
+      app: 1,
+      screen: $("#home").classList.contains("active") ? "home" : $("#profiles").classList.contains("active") ? "profiles" : "start",
+      view: ($("#home .view.on")?.id || "v-home").slice(2),
+      title: $("#title").classList.contains("on"),
+      player: pl.classList.contains("on"),
+      photo: lb.classList.contains("on"),
+      p: state.profileIdx,
+    };
   }
+  const hashOf = st => st.photo ? "#photo" : st.player ? "#watch" : st.title ? "#title" :
+    st.screen === "home" ? (st.view === "home" ? "#home" : "#" + st.view) : st.screen === "profiles" ? "#profiles" : "";
+  function remember(st) { try { sessionStorage.setItem("aswiniflix-ui", JSON.stringify({ p: st.p })); } catch (e) {} }
+  function navPush() {
+    if (NAV.applying) return;
+    const st = cur(), prev = history.state;
+    if (prev && prev.app && hashOf(prev) === hashOf(st) && prev.screen === st.screen) return navReplace();  // no duplicate steps
+    history.pushState(st, "", hashOf(st) || location.pathname + location.search); remember(st);
+  }
+  function navReplace() {
+    const st = cur(); history.replaceState(st, "", hashOf(st) || location.pathname + location.search); remember(st);
+  }
+  function backOr(fn) {  // on-screen ✕ / ← buttons go back through history, so the phone's Back stays in step
+    if (history.state && history.state.app && history.length > 1) history.back(); else { fn(); navReplace(); }
+  }
+  const herIdx = () => Math.max(0, C.profiles.findIndex(pr => pr.name === C.herName));
+  function applyState(st) {
+    NAV.applying = true;
+    try {
+      if (!st.photo && lb.classList.contains("on")) lb.classList.remove("on");
+      if (!st.player && pl.classList.contains("on")) closePlayer();
+      if (st.screen === "profiles" && !$("#profiles").classList.contains("active")) {
+        if ($("#title").classList.contains("on")) closeTitle();
+        clearInterval(clockTimer); clearInterval(posterTimer); started = true; buildProfiles();
+      }
+      if (st.screen === "home") {
+        if (!$("#home").classList.contains("active")) {
+          state.profileIdx = Number.isInteger(st.p) && C.profiles[st.p] ? st.p : herIdx();
+          state.profile = C.profiles[state.profileIdx]; started = true; enterHome();
+        }
+        if (st.view && $("#home .view.on")?.id !== "v-" + st.view) switchView(st.view);
+        const open = $("#title").classList.contains("on");
+        if (!(st.title || st.player) && open) closeTitle();
+        if ((st.title || st.player) && !open) openTitle(st.player);  // a video never restarts by itself
+      }
+    } finally { NAV.applying = false; }
+  }
+  window.addEventListener("popstate", e => { if (e.state && e.state.app) applyState(e.state); });
+
+  // refresh / reopened link: go straight back to where she was (skips the intro); a fresh visit starts at "Tap to open"
+  (() => {
+    const H = location.hash.slice(1);
+    let st = history.state && history.state.app ? history.state : null;
+    if (!st && ["home", "hot", "me", "title", "watch", "photo", "profiles"].includes(H)) {
+      let saved = {}; try { saved = JSON.parse(sessionStorage.getItem("aswiniflix-ui")) || {}; } catch (e) {}
+      st = { app: 1, screen: H === "profiles" ? "profiles" : "home", view: H === "hot" || H === "me" ? H : "home",
+             title: H === "title" || H === "watch", player: false, photo: false, p: saved.p };
+    }
+    if (!st || st.screen === "start") return;
+    started = true;
+    applyState({ ...st, player: false, photo: false });
+    navReplace();
+  })();
 })();
